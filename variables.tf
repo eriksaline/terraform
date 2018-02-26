@@ -1,4 +1,17 @@
+variable "provider_name" {
+  type        = "string"
+  description = "The provider"
+  default     = "OpenStack"
+}
+
+variable "provider_version" {
+  type        = "string"
+  description = "The provider version"
+  default     = "~> 1.2"
+}
+
 variable "openstack_user_name" {
+  type        = "string"
   description = "The username for the Tenant."
   default     = "admin"
 }
@@ -8,6 +21,7 @@ variable "password" {
 }
 
 variable "openstack_domain_name" {
+  type        = "string"
   description = "The domain name of the Project."
   default     = "Default"
 }
@@ -34,7 +48,12 @@ variable "openstack_auth_url" {
 
 variable "image" {
   type    = "string"
-  default = "ubuntu"
+  default = "ubuntu_17"
+}
+
+variable "image_id" {
+  type    = "string"
+  default = "be3d3c9f-256c-45cc-88d2-958884adc6aa"
 }
 
 variable "small_flavor" {
@@ -67,22 +86,10 @@ variable "ssh_user_name" {
   default = "ubuntu"
 }
 
-variable "ssh_key_pair" {
-  type    = "string"
-  default = "monsieur"
-}
-
-variable "image_id" {
-  type    = "string"
-  default = "e8989217-9e62-4f0a-874c-29df2c0e0e67"
-}
-
 variable "external_network_id" {
   type    = "string"
   default = "e8989217-9e62-4f0a-874c-29df2c0e0e67"
 }
 
-variable "pool" {
-  type    = "string"
-  default = "public"
-}
+
+

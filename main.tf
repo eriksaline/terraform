@@ -1,156 +1,70 @@
-resource "openstack_compute_keypair_v2" "terraform" {
-  name       = "terraform"
-  public_key = "${file("${var.ssh_key_pub_file}")}"
+# Configure the OpenStack Provider
+# https://www.terraform.io/docs/providers/openstack/index.html
+# Password is injected from OS_PASSWORD in .profile
+
+provider "openstack" {
+  user_name   = "${var.openstack_user_name}"
+  tenant_name = "${var.openstack_project_name}"
+  auth_url    = "${var.openstack_auth_url}"
+  tenant_id   = "${var.openstack_project_id}"
+  domain_name = "${var.openstack_domain_name}"
+  password    = "${var.password}"
+  version     = "~> 1.2"
 }
 
-resource "openstack_compute_keypair_v2" "your_kit" {
-  name       = "your_kit"
-  public_key = "${file("${var.ssh_key_pub_file}")}"
+module "dev_ops" {
+  source  = "./modules/projects"
+  name    = "dev_ops"
+  description = "OpenStack Project for DevOp related services"
 }
 
-resource "openstack_networking_network_v2" "terraform" {
-  name           = "terraform"
-  admin_state_up = "true"
-}
+//module "admin" {
+//  source  = "./modules/projects"
+//  name    = "admin"
+//  description = "OpenStack Project for Admin related services"
+//}
 
-resource "openstack_networking_subnet_v2" "terraform" {
-  name            = "terraform"
-  network_id      = "${openstack_networking_network_v2.terraform.id}"
-  cidr            = "10.0.0.0/24"
-  ip_version      = 4
-  dns_nameservers = ["8.8.8.8", "8.8.4.4"]
-}
+//module "public_network" {
+//  source          = "./modules/network/public_network"
+//  name            = "public"
+//  admin_state_up  = "true"
+//}
 
-resource "openstack_networking_router_v2" "terraform" {
-  name             = "terraform"
-  admin_state_up   = "true"
+module "web-01" {
+  source              = "./modules/compute/single_instance"
+  name                = "web-01"
+  flavor              = "${var.small_flavor}"
+  os_image            = "${var.image}"
+  remote-exec         = ["sudo apt-get -y update","sudo apt-get -y upgrade","sudo apt-get -y install git-all"]
+  private_key         = "${var.ssh_key_private_file}"
+  public_key          = "${var.ssh_key_pub_file}"
   external_network_id = "${var.external_network_id}"
-}
-
-resource "openstack_networking_router_interface_v2" "terraform" {
-  router_id = "${openstack_networking_router_v2.terraform.id}"
-  subnet_id = "${openstack_networking_subnet_v2.terraform.id}"
-}
-
-resource "openstack_compute_secgroup_v2" "terraform" {
-  name        = "terraform"
-  description = "Security group for the Terraform example instances"
-
-  rule {
-    from_port   = 22
-    to_port     = 22
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 80
-    to_port     = 80
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = -1
-    to_port     = -1
-    ip_protocol = "icmp"
-    cidr        = "0.0.0.0/0"
-  }
-}
-
-resource "openstack_compute_secgroup_v2" "your_kit" {
-  name        = "your_kit"
-  description = "Security group for the Terraform example instances"
-
-  rule {
-    from_port   = 22
-    to_port     = 22
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 80
-    to_port     = 80
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = -1
-    to_port     = -1
-    ip_protocol = "icmp"
-    cidr        = "0.0.0.0/0"
-  }
-}
-
-resource "openstack_compute_floatingip_v2" "terraform" {
-  pool       = "${var.pool}"
-  depends_on = ["openstack_networking_router_interface_v2.terraform"]
-}
-
-resource "openstack_compute_floatingip_v2" "your_kit" {
-  pool       = "${var.pool}"
-  depends_on = ["openstack_networking_router_interface_v2.terraform"]
-}
-
-resource "openstack_compute_instance_v2" "terraform" {
-  name            = "terraform"
-  image_name      = "${var.image}"
-  flavor_name     = "${var.small_flavor}"
-  key_pair        = "${openstack_compute_keypair_v2.terraform.name}"
-  security_groups = ["${openstack_compute_secgroup_v2.terraform.name}"]
-
-  network {
-    uuid = "${openstack_networking_network_v2.terraform.id}"
-  }
+  pool                = "public"
 
 }
 
-resource "openstack_compute_instance_v2" "your_kit" {
-  name            = "your_kit"
-  image_name        = "${var.image}"
-  flavor_name       = "${var.small_flavor}"
-  key_pair        = "${openstack_compute_keypair_v2.your_kit.name}"
-  security_groups = ["${openstack_compute_secgroup_v2.terraform.name}"]
-
-  network {
-    uuid = "${openstack_networking_network_v2.terraform.id}"
-  }
-}
-
-resource "openstack_compute_floatingip_associate_v2" "your_kit" {
-  floating_ip = "${openstack_compute_floatingip_v2.your_kit.address}"
-  instance_id = "${openstack_compute_instance_v2.your_kit.id}"
-
-  provisioner "remote-exec" {
-    connection {
-      host = "${openstack_compute_floatingip_v2.your_kit.address}"
-      user     = "${var.ssh_user_name}"
-      private_key = "${file(var.ssh_key_private_file)}"
-    }
-
-    inline = [
-      "sudo apt-get -y update"
-    ]
-  }
+module "web-02" {
+  source              = "./modules/compute/single_instance"
+  name                = "web-02"
+  flavor              = "${var.small_flavor}"
+  os_image            = "${var.image}"
+  remote-exec         = ["sudo apt-get -y update","sudo apt-get -y upgrade","sudo apt-get -y install git-all"]
+  private_key         = "${var.ssh_key_private_file}"
+  public_key          = "${var.ssh_key_pub_file}"
+  external_network_id = "${var.external_network_id}"
+  pool                = "public"
 
 }
 
-resource "openstack_compute_floatingip_associate_v2" "terraform" {
-  floating_ip = "${openstack_compute_floatingip_v2.terraform.address}"
-  instance_id = "${openstack_compute_instance_v2.terraform.id}"
-
-  provisioner "remote-exec" {
-    connection {
-      host = "${openstack_compute_floatingip_v2.terraform.address}"
-      user     = "${var.ssh_user_name}"
-      private_key = "${file(var.ssh_key_private_file)}"
-    }
-
-    inline = [
-      "sudo apt-get -y update"
-    ]
-  }
+module "web-03" {
+  source              = "./modules/compute/single_instance"
+  name                = "web-03"
+  flavor              = "${var.small_flavor}"
+  os_image            = "${var.image}"
+  remote-exec         = ["sudo apt-get -y update","sudo apt-get -y upgrade","sudo apt-get -y install git-all"]
+  private_key         = "${var.ssh_key_private_file}"
+  public_key          = "${var.ssh_key_pub_file}"
+  external_network_id = "${var.external_network_id}"
+  pool                = "public"
 
 }
