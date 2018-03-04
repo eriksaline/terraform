@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+TERRAFORM_DOWNLOAD_URL="https://releases.hashicorp.com/terraform/0.11.3/terraform_0.11.3_linux_amd64.zip"
 TERRAFORM_ZIP_LOCATION="/tmp/terraform.zip"
 TERRAFORM_INSTALL_LOCATION="/usr/local/bin"
 CREATE_STACK_USER="sudo useradd -s /bin/bash -d /opt/stack -m stack"

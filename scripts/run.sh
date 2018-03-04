@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Download Terrafrom URL
-TERRAFORM_DOWNLOAD_URL="https://releases.hashicorp.com/terraform/0.11.3/terraform_0.11.3_linux_amd64.zip"
-DEVSTACK_DOWNLOAD_URL=""
-
 # Run basic system checks
 source checks.sh
 
