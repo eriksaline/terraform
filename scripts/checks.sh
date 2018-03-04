@@ -2,11 +2,14 @@
 
 source installers.sh
 
-TERRAFORM_CMD=`command -v terraform`
-UNZIP_CMD=`command -v unzip`
-GIT_CMD=`command -v unzip`
+TERRAFORM_CMD="command -v terraform"
+UNZIP_CMD="command -v unzip"
+GIT_CMD="command -v unzip"
+OPENSTACK_CMD="command -v openstack"
+OPENSTACK_RUNNING="sudo systemctl is-active devstack@n-cpu.service"
 STACK_LOCATION="$HOME/devstack/stack.sh"
-DEVSTACK_CMD=`test -x ${STACK_LOCATION}`
+OPENSTACK_START="sudo -t -i -u stack ${STACK_LOCATION}"
+
 
 #$ command -v foo >/dev/null 2>&1 || { echo >&2 "I require foo but it's not installed.  Aborting."; exit 1; }
 #$ type foo >/dev/null 2>&1 || { echo >&2 "I require foo but it's not installed.  Aborting."; exit 1; }
@@ -14,7 +17,7 @@ DEVSTACK_CMD=`test -x ${STACK_LOCATION}`
 
 checkForTerraform () {
     printf "Checking for Terraform...\n"
-    TERRAFORM_PATH=${TERRAFORM_CMD}
+    TERRAFORM_PATH=`${TERRAFORM_CMD}`
     if [ $? -eq 0 ]; then
         printf "Terraform found...\n"
         printf "Terraform path: ${TERRAFORM_PATH}\n"
@@ -28,7 +31,7 @@ checkForTerraform () {
 
 checkForUnzip () {
     printf "Checking for Unzip...\n"
-    UNZIP_PATH=${UNZIP_CMD}
+    UNZIP_PATH=`${UNZIP_CMD}`
     if [ $? -eq 0 ]; then
         printf "Unzip found...\n"
         printf "Unzip path: ${UNZIP_PATH}\n"
@@ -42,7 +45,7 @@ checkForUnzip () {
 
 checkForGit () {
     printf "Checking for Git...\n"
-    GIT_PATH=${GIT_CMD}
+    GIT_PATH=`${GIT_CMD}`
     if [ $? -eq 0 ]; then
         printf "Git found...\n"
         printf "Git path: ${GIT_PATH}\n"
@@ -56,10 +59,10 @@ checkForGit () {
 
 checkForDevstack () {
     printf "Checking for Devstack...\n"
-    DEVSTACK_FILE=${DEVSTACK_CMD}
+    OPENSTACK_PATH=`${OPENSTACK_CMD}`
     if [ $? -eq 0 ]; then
         printf "DevStack found...\n"
-        printf "DevStack path: ${STACK_LOCATION}\n"
+        printf "DevStack path: ${OPENSTACK_PATH}\n"
     else
         printf "DevStack not found...\n"
         printf "Installing DevStack...\n"
@@ -69,4 +72,17 @@ checkForDevstack () {
 
 checkForRunningDevstack () {
     printf "Checking for running DevStack...\n"
+    OPENSTACK_RESULT=`${OPENSTACK_CMD}`
+    if [ $? -eq 0 ]; then
+        printf "DevStack is running...\n"
+    else
+        printf "Starting DevStack...\n"
+        OPENSTACK_RUNNING_RESULT=`${OPENSTACK_START}`
+        if [ $? -eq 0 ]; then
+            printf "DevStack is running...\n"
+        else
+            exit 1
+        fi
+    fi
+    return 0
 }
