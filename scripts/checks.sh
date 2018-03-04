@@ -7,9 +7,6 @@ UNZIP_CMD="command -v unzip"
 GIT_CMD="command -v unzip"
 OPENSTACK_CMD="command -v openstack"
 OPENSTACK_RUNNING="sudo systemctl is-active devstack@n-cpu.service"
-STACK_LOCATION="$HOME/devstack/stack.sh"
-OPENSTACK_START="sudo -t -i -u stack ${STACK_LOCATION}"
-
 
 #$ command -v foo >/dev/null 2>&1 || { echo >&2 "I require foo but it's not installed.  Aborting."; exit 1; }
 #$ type foo >/dev/null 2>&1 || { echo >&2 "I require foo but it's not installed.  Aborting."; exit 1; }
@@ -77,10 +74,11 @@ checkForRunningDevstack () {
         printf "DevStack is running...\n"
     else
         printf "Starting DevStack...\n"
-        OPENSTACK_RUNNING_RESULT=`${OPENSTACK_START}`
+        startDevstack
         if [ $? -eq 0 ]; then
             printf "DevStack is running...\n"
         else
+            printf "DevStack failed to start, exiting...\n"
             exit 1
         fi
     fi
